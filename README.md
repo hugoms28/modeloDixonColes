@@ -1,94 +1,62 @@
-# ⚽ Modelo xG con Decaimiento Exponencial
+# Modelo Dixon-Coles con xG
 
-Modelo de **goles esperados (xG)** basado en distancia euclidiana y decaimiento exponencial, con un **R² = 0.947**.
+Modelo de predicción de fútbol basado en **Dixon-Coles** usando **Expected Goals (xG)** para estimar probabilidades de resultados y detectar value bets.
 
-## 📐 Fórmula
+## Características
 
-```
-xG = e^(-d/k) × a + b
-```
+- **Time Decay**: Partidos recientes pesan más (half_life configurable)
+- **Múltiples mercados**: 1X2, Over/Under 1.5/2.5/3.5, BTTS, Doble Oportunidad
+- **Comparación con odds**: Integración con Pinnacle vía the-odds-api
+- **Value betting**: Detección automática de apuestas con edge positivo
+- **ROI Tracking**: Sistema de seguimiento de apuestas y resultados
+- **Cache inteligente**: Evita descargas repetidas de Understat
 
-Donde `d = √(dx² + dy²)` es la distancia euclidiana al centro de la portería (teorema de Pitágoras).
-
-## 🧪 Pruébalo sin instalar nada
-
-| Notebook | Descripción |
-|----------|-------------|
-| [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jeke-deportivas/jeke-xg-model-basic/main?urlpath=%2Fdoc%2Ftree%2Fjeke-xg-lite.ipynb) | **Lite** - Solo Inputs Jeknica Poisson |
-| [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jeke-deportivas/jeke-xg-model-basic/main?urlpath=%2Fdoc%2Ftree%2Fjeke-xg-model.ipynb) | **Modelo** - Solo exponencial + rankings |
-| [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jeke-deportivas/jeke-xg-model-basic/main?urlpath=%2Fdoc%2Ftree%2Fjeke-xg-model-prototype.ipynb) | **Prototipo** - Proceso completo, compara modelos |
-| [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jeke-deportivas/jeke-xg-model-basic/main?urlpath=%2Fdoc%2Ftree%2Fjeke-dixon-coles.ipynb) | **Dixon-Coles** - Predicciones 1X2 basadas en xG |
-
-## 📦 Requisitos
-
-- **Python 3.13.11** (recomendado usar [pyenv](https://github.com/pyenv/pyenv))
-- [pip](https://pip.pypa.io/en/stable/)
-
-## 🚀 Instalación
+## Instalación
 
 ```bash
-git clone https://github.com/jeke-deportivas/jeke-xg-model-basic.git
-cd jeke-xg-model-basic
-bin/setup
-source .venv/bin/activate
+git clone https://github.com/hugoms28/modeloDixonColes.git
+cd modeloDixonColes
+pip install -r requirements.txt
 ```
 
-## ▶️ Uso
+## Uso rápido
 
-1. Lanza Jupyter Lab:
+```python
+# Cargar modelo entrenado
+model = load_model(latest=True, league="EPL")
 
-   ```bash
-   jupyter lab
-   ```
+# Predecir un partido
+pred = predict_match("Liverpool", "Arsenal", model)
+print(f"Victoria Liverpool: {pred['p_home']*100:.1f}%")
+print(f"Over 2.5: {pred['p_over_25']*100:.1f}%")
+```
 
-2. Abre el archivo `jeke-xg-model-prototype.ipynb`.
+## Documentación
 
-3. Selecciona el kernel **Python (jeke-xg)**.
+Ver [GUIA_USO.md](GUIA_USO.md) para el workflow completo por jornada.
 
-4. Ejecuta las celdas en orden.
-   El notebook descarga los datos de **Understat** para la liga y temporadas definidas en:
+## Estructura del proyecto
 
-   ```python
-   LEAGUE = "EPL"     # "EPL", "La_Liga", "Bundesliga", "Serie_A", "Ligue_1", "RFPL"
-   SEASON = ["2024", "2025"]
-   ```
+| Archivo | Descripción |
+|---------|-------------|
+| `jeke-dixon-coles.ipynb` | Notebook principal con el modelo |
+| `GUIA_USO.md` | Guía de uso paso a paso |
+| `models/` | Modelos guardados |
+| `cache/` | Cache de datos de Understat |
+| `bets_history.csv` | Historial de apuestas |
 
-## 📊 Qué hace cada notebook
+## Ligas disponibles
 
-### Lite (`jeke-xg-lite.ipynb`)
-* Descarga tiros de una liga/temporada desde Understat
-* Calcula xG con modelo exponencial
-* Genera inputs Jeknica Poisson por equipo
+- EPL (Premier League)
+- La_Liga
+- Bundesliga
+- Serie_A
+- Ligue_1
 
-### Modelo (`jeke-xg-model.ipynb`)
-* Proceso educativo del modelo exponencial
-* Rankings ofensivos y defensivos por equipo
-* Análisis por jugador: xG, xA y over/under performance
-* Consulta de xG por partido
+## Créditos
 
-### Prototipo (`jeke-xg-model-prototype.ipynb`)
-* Proceso completo de investigación
-* Compara tres modelos:
-  | Modelo | R² |
-  |--------|-----|
-  | Longitudinal (solo X) | 0.888 |
-  | Euclidiano (X + Y) | 0.917 |
-  | **Decaimiento Exponencial** | **0.947** |
+Proyecto desarrollado a partir de los conceptos y código de [Jeke Deportivas](https://github.com/jeke-deportivas), gran referente en el análisis de datos deportivos con xG.
 
-### Dixon-Coles (`jeke-dixon-coles.ipynb`)
-* Modelo Dixon-Coles modificado para usar **xG** en lugar de goles reales
-* Entrena con xG continuo, predice goles discretos (Poisson)
-* Estima parámetros de ataque (α) y defensa (β) por equipo
-* Incluye factor de correlación (ρ) para marcadores bajos
-* Visualizaciones: scatter ataque vs defensa, heatmap de marcadores
-* Función interactiva `predecir_partido(local, visitante)`
+## Licencia
 
-## 📝 Notas
-
-* La librería `jeke-understat-scrapper` usa scraping, por lo que puede tardar algunos minutos en descargar toda una temporada.
-* Para evitar bloqueos, el código incluye `sleep` entre requests.
-
-## 📄 Licencia
-
-Este código está bajo la licencia MIT.
-© 2025 **Jeke Deportivas**
+MIT
